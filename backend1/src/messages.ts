@@ -1,3 +1,13 @@
 export const INIT_GAME ="init_game";
 export const MOVE = "move";
 export const GAME_OVER ="game_over";
+export const REQUEST_REMATCH = "request_rematch";
+export const ACCEPT_REMATCH = "accept_rematch";
+export const REMATCH_REQUESTED = "rematch_requested";
+export const CREATE_ROOM = "create_room";
+export const JOIN_ROOM = "join_room";
+export const ROOM_CREATED = "room_created";
+export const ROOM_JOINED = "room_joined";
+export const ROOM_ERROR = "room_error";
+
+

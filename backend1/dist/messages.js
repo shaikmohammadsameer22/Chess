@@ -1,6 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GAME_OVER = exports.MOVE = exports.INIT_GAME = void 0;
+exports.ROOM_ERROR = exports.ROOM_JOINED = exports.ROOM_CREATED = exports.JOIN_ROOM = exports.CREATE_ROOM = exports.REMATCH_REQUESTED = exports.ACCEPT_REMATCH = exports.REQUEST_REMATCH = exports.GAME_OVER = exports.MOVE = exports.INIT_GAME = void 0;
 exports.INIT_GAME = "init_game";
 exports.MOVE = "move";
 exports.GAME_OVER = "game_over";
+exports.REQUEST_REMATCH = "request_rematch";
+exports.ACCEPT_REMATCH = "accept_rematch";
+exports.REMATCH_REQUESTED = "rematch_requested";
+exports.CREATE_ROOM = "create_room";
+exports.JOIN_ROOM = "join_room";
+exports.ROOM_CREATED = "room_created";
+exports.ROOM_JOINED = "room_joined";
+exports.ROOM_ERROR = "room_error";

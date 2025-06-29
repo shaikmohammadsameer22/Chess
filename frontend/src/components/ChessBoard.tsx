@@ -1,72 +1,126 @@
-import type { Color, PieceSymbol, Square } from "chess.js"
-import { useState } from "react";
+import type { Color, PieceSymbol, Square } from "chess.js";
+import { useState, useRef } from "react";
 import { MOVE } from "../screens/Game";
 
-export const ChessBoard=({board,socket,setBoard,chess}:{
-    chess:any;
-setBoard:any;
-    board:({
-        square:Square;
-        type:PieceSymbol;
-        color:Color;
-    }| null)[][];
-     socket:WebSocket;
-})=>{
-    const [from,setFrom]=useState<null | Square>(null);
-    
-    return <div className="text-white-200">
-        {board.map((row,i)=>{
-            return <div key={i} className="flex">
-                {row.map((square,j)=>{
-                    const squareRepresentation= String.fromCharCode(97 +(j%8))+""+(8-i) as Square;
-                    return <div onClick={()=>{
-                        if(!from){
-                            setFrom(squareRepresentation);
-                        }else{
-                            console.log(square);
-                            socket.send(JSON.stringify({
-                                type: MOVE,
-                                payload:{
-                                    move:{
-                                    from,
-                                    to:squareRepresentation
-                                    }
-                                    
-                                }
-                            }))
-                            setFrom(null);
-                             chess.move({
-                                  from,
-                                    to:squareRepresentation
-                             });
-                            setBoard(chess.board());
-                            console.log({
-                                from,
-                                to:squareRepresentation
-                            } )
-                        }                            
-                    }} key={j} className={`w-16 h-16 ${(i+j)%2===0 ? 'bg-green-500' :'bg-white'}`}>
-                        <div className="w-full justify-center flex h-full">
-                            <div className="h-full justify-center flex flex-col">
-                              {square ? (
-  <img
-    className="w-4"
-    src={`/${square.color === "b" ? square.type : `${square.type.toUpperCase()} copy`}.png`}
-    alt=""
-  />
-) : null}
+export const ChessBoard = ({
+  board,
+  socket,
+  setBoard,
+  chess,
+  playerColor,
+  resultMessage, // ✅ NEW PROP
+}: {
+  chess: any;
+  setBoard: any;
+  board: (
+    | {
+        square: Square;
+        type: PieceSymbol;
+        color: Color;
+      }
+    | null
+  )[][];
+  socket: WebSocket;
+  playerColor: "w" | "b";
+  resultMessage: string | null; // ✅ NEW PROP TYPE
+}) => {
+  const [from, setFrom] = useState<null | Square>(null);
+  const dragSoundRef = useRef<HTMLAudioElement | null>(null);
 
+  const handleMove = (from: Square, to: Square) => {
+    try {
+      socket.send(
+        JSON.stringify({
+          type: MOVE,
+          payload: { move: { from, to } },
+        })
+      );
+      chess.move({ from, to });
+      setBoard(chess.board());
+      if (dragSoundRef.current) {
+        dragSoundRef.current.currentTime = 0;
+        dragSoundRef.current.play();
+      }
+    } catch (e) {
+      console.error("Invalid move:", e);
+    }
+    setFrom(null);
+  };
 
+  const displayBoard = playerColor === "w" ? board : [...board].reverse();
 
-                            </div>
+  return (
+    <>
+      <audio ref={dragSoundRef} src="/drag.wav" preload="auto" />
 
-                        </div>
-
-                       
-                    </div>
-                })}
-
+      {/* ✅ Outer wrapper is relative for positioning overlay */}
+      <div className="relative p-4 bg-gray-900 rounded-xl inline-block border-4 border-gray-700">
+        {/* ✅ Game over overlay */}
+        {resultMessage && (
+          <div className="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
+            <div className="bg-gray-800 text-white text-3xl font-bold px-6 py-4 rounded-lg shadow-xl animate-fadeIn">
+              {resultMessage}
             </div>
+          </div>
+        )}
+
+        {displayBoard.map((row, rowIndex) => {
+          const displayRow = playerColor === "w" ? row : [...row].reverse();
+
+          return (
+            <div key={rowIndex} className="flex">
+              {displayRow.map((square, colIndex) => {
+                const realRow = playerColor === "w" ? rowIndex : 7 - rowIndex;
+                const realCol = playerColor === "w" ? colIndex : 7 - colIndex;
+
+                const file = String.fromCharCode(97 + realCol);
+                const rank = `${8 - realRow}`;
+                const squareRepresentation = `${file}${rank}` as Square;
+
+                const isLight = (realRow + realCol) % 2 === 0;
+                const isSelected = from === squareRepresentation;
+
+                return (
+                  <div
+                    key={colIndex}
+                    onClick={() => {
+                      if (!from) {
+                        setFrom(squareRepresentation);
+                      } else {
+                        handleMove(from, squareRepresentation);
+                      }
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => {
+                      if (from) handleMove(from, squareRepresentation);
+                    }}
+                    className={`w-16 h-16 flex items-center justify-center cursor-pointer select-none transition duration-150 ease-in-out
+                      ${isSelected ? "ring-4 ring-yellow-500" : ""}
+                      ${isLight ? "bg-[#eeeed2]" : "bg-[#769656]"}
+                      hover:brightness-110`}
+                  >
+                    {square ? (
+                      <img
+                        src={`/${
+                          square.color === "b"
+                            ? square.type
+                            : `${square.type.toUpperCase()} copy`
+                        }.png`}
+                        alt={`${square.color} ${square.type}`}
+                        className="w-10 h-10"
+                        draggable={true}
+                        onDragStart={() => {
+                          setFrom(squareRepresentation);
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          );
         })}
-    </div>
-}
+      </div>
+    </>
+  );
+};

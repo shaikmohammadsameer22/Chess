@@ -7,5 +7,8 @@ const gameManager = new GameManager_1.GameManager();
 wss.on('connection', function connection(ws) {
     gameManager.addUser(ws);
     ws.on("disconnect", () => gameManager.removeUser(ws));
-    ws.send('e4 e5');
+    ws.send(JSON.stringify({
+        type: "welcome",
+        payload: { message: "Welcome to the Chess Game!" }
+    }));
 });
