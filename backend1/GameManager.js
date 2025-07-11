@@ -3,20 +3,22 @@ import {
   INIT_GAME,
   MOVE,
   REQUEST_REMATCH
-} from "./messages";
-import { Game } from "./Game";
+} from "./messages.js";
+import { Game } from "./Game.js";
 
 export class GameManager {
-  private games: Game[] = [];
-  private pendingUser: WebSocket | null = null;
-  private users: WebSocket[] = [];
+  constructor() {
+    this.games = [];
+    this.pendingUser = null;
+    this.users = [];
+  }
 
-  addUser(socket: WebSocket) {
+  addUser(socket) {
     this.users.push(socket);
     this.addHandler(socket);
   }
 
-  removeUser(socket: WebSocket) {
+  removeUser(socket) {
     this.users = this.users.filter((user) => user !== socket);
     if (this.pendingUser === socket) {
       this.pendingUser = null;
@@ -26,11 +28,10 @@ export class GameManager {
     );
   }
 
-  private addHandler(socket: WebSocket) {
+  addHandler(socket) {
     socket.on("message", (data) => {
       const message = JSON.parse(data.toString());
 
-      // ✅ Find the game this socket belongs to
       const game = this.games.find(
         (g) => g.player1 === socket || g.player2 === socket
       );
@@ -38,12 +39,10 @@ export class GameManager {
       switch (message.type) {
         case INIT_GAME:
           if (game) {
-            // "Play Again" scenario (rematch)
             game.handleMessage(socket, message);
             return;
           }
 
-          // Initial pairing
           if (this.pendingUser && this.pendingUser !== socket) {
             const newGame = new Game(this.pendingUser, socket);
             this.games.push(newGame);

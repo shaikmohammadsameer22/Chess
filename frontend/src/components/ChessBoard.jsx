@@ -1,4 +1,3 @@
-import type { Color, PieceSymbol, Square } from "chess.js";
 import { useState, useRef } from "react";
 import { MOVE } from "../screens/Game";
 
@@ -8,26 +7,12 @@ export const ChessBoard = ({
   setBoard,
   chess,
   playerColor,
-  resultMessage, // ✅ NEW PROP
-}: {
-  chess: any;
-  setBoard: any;
-  board: (
-    | {
-        square: Square;
-        type: PieceSymbol;
-        color: Color;
-      }
-    | null
-  )[][];
-  socket: WebSocket;
-  playerColor: "w" | "b";
-  resultMessage: string | null; // ✅ NEW PROP TYPE
+  resultMessage,
 }) => {
-  const [from, setFrom] = useState<null | Square>(null);
-  const dragSoundRef = useRef<HTMLAudioElement | null>(null);
+  const [from, setFrom] = useState(null);
+  const dragSoundRef = useRef(null);
 
-  const handleMove = (from: Square, to: Square) => {
+  const handleMove = (from, to) => {
     try {
       socket.send(
         JSON.stringify({
@@ -53,9 +38,7 @@ export const ChessBoard = ({
     <>
       <audio ref={dragSoundRef} src="/drag.wav" preload="auto" />
 
-      {/* ✅ Outer wrapper is relative for positioning overlay */}
       <div className="relative p-4 bg-gray-900 rounded-xl inline-block border-4 border-gray-700">
-        {/* ✅ Game over overlay */}
         {resultMessage && (
           <div className="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
             <div className="bg-gray-800 text-white text-3xl font-bold px-6 py-4 rounded-lg shadow-xl animate-fadeIn">
@@ -75,7 +58,7 @@ export const ChessBoard = ({
 
                 const file = String.fromCharCode(97 + realCol);
                 const rank = `${8 - realRow}`;
-                const squareRepresentation = `${file}${rank}` as Square;
+                const squareRepresentation = `${file}${rank}`;
 
                 const isLight = (realRow + realCol) % 2 === 0;
                 const isSelected = from === squareRepresentation;

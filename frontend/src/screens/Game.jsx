@@ -15,30 +15,26 @@ export const Game = () => {
   const [chess, setChess] = useState(new Chess());
   const [board, setBoard] = useState(chess.board());
   const [started, setStarted] = useState(false);
-  const [playerColor, setPlayerColor] = useState<"w" | "b">("w");
-  const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [playerColor, setPlayerColor] = useState("w");
+  const [resultMessage, setResultMessage] = useState(null);
   const [waitingRematch, setWaitingRematch] = useState(false);
   const [showAcceptRematch, setShowAcceptRematch] = useState(false);
 
-  // Send a message to request a new game (or rematch)
   const sendPlayRequest = () => {
     socket?.send(JSON.stringify({ type: INIT_GAME }));
   };
 
-  // Request rematch: only sends a signal
   const requestRematch = () => {
     setWaitingRematch(true);
     socket?.send(JSON.stringify({ type: REQUEST_REMATCH }));
   };
 
-  // Accept opponent's rematch request
   const acceptRematch = () => {
-  setShowAcceptRematch(false);
-  setResultMessage(null);
-  setWaitingRematch(true); // Optional: show “Waiting…” in case opponent is slow
-  socket?.send(JSON.stringify({ type: REQUEST_REMATCH })); // ✅ FIXED LINE
-};
-
+    setShowAcceptRematch(false);
+    setResultMessage(null);
+    setWaitingRematch(true);
+    socket?.send(JSON.stringify({ type: REQUEST_REMATCH }));
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -73,7 +69,9 @@ export const Game = () => {
             if (winner === "draw") {
               setResultMessage("Game Drawn 🤝");
             } else {
-              setResultMessage(`${winner.charAt(0).toUpperCase() + winner.slice(1)} Won 🎉`);
+              setResultMessage(
+                `${winner.charAt(0).toUpperCase() + winner.slice(1)} Won 🎉`
+              );
             }
             break;
 
