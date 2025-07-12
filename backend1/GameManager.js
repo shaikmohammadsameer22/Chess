@@ -2,8 +2,12 @@ import { WebSocket } from "ws";
 import {
   INIT_GAME,
   MOVE,
-  REQUEST_REMATCH
+  REQUEST_REMATCH,
+  OFFER_DRAW,
+  DRAW_ACCEPTED,
+  RESIGN
 } from "./messages.js";
+
 import { Game } from "./Game.js";
 
 export class GameManager {
@@ -70,11 +74,15 @@ export class GameManager {
         }
 
         case MOVE:
-        case REQUEST_REMATCH:
-          if (game) {
-            game.handleMessage(socket, message);
-          }
-          break;
+case REQUEST_REMATCH:
+case OFFER_DRAW:
+case DRAW_ACCEPTED:
+case RESIGN:
+  if (game) {
+    game.handleMessage(socket, message);
+  }
+  break;
+
 
         default:
           console.warn("⚠️ Unhandled message type:", message.type);

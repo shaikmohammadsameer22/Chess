@@ -11,7 +11,7 @@ export const ChessBoard = ({
   resultMessage,
   playerInfo,
   opponentInfo,
-  displayTimers, // ✅ Timer values passed in
+  displayTimers,
 }) => {
   const [from, setFrom] = useState(null);
   const dragSoundRef = useRef(null);
@@ -42,14 +42,14 @@ export const ChessBoard = ({
     <>
       <audio ref={dragSoundRef} src="/drag.wav" preload="auto" />
 
-      {/* Profile Dropdown fixed to top-right of screen */}
+      {/* Profile Dropdown */}
       <div className="fixed top-4 right-4 z-50">
         <ProfileDropdown />
       </div>
 
-      <div className="relative p-4 bg-gray-900 rounded-xl inline-block border-4 border-gray-700">
+      <div className="relative p-4 bg-[#1e1e1e] rounded-xl inline-block border-4 border-[#1e1e1e]">
         <div className="w-[512px] text-white font-semibold text-lg">
-          {/* Show Opponent info (Top) */}
+          {/* Opponent Info */}
           {playerInfo.username && opponentInfo.username && (
             <div className="flex justify-between mb-2 px-1">
               <div>{`${opponentInfo.username} (${opponentInfo.rating})`}</div>
@@ -57,7 +57,7 @@ export const ChessBoard = ({
             </div>
           )}
 
-          {/* Chess board container */}
+          {/* Chess Board */}
           <div className="relative">
             {resultMessage && (
               <div className="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
@@ -67,10 +67,8 @@ export const ChessBoard = ({
               </div>
             )}
 
-            {/* Render the board */}
             {displayBoard.map((row, rowIndex) => {
               const displayRow = playerColor === "w" ? row : [...row].reverse();
-
               return (
                 <div key={rowIndex} className="flex">
                   {displayRow.map((square, colIndex) => {
@@ -80,7 +78,6 @@ export const ChessBoard = ({
                     const file = String.fromCharCode(97 + realCol);
                     const rank = `${8 - realRow}`;
                     const squareRepresentation = `${file}${rank}`;
-
                     const isLight = (realRow + realCol) % 2 === 0;
                     const isSelected = from === squareRepresentation;
 
@@ -126,7 +123,7 @@ export const ChessBoard = ({
             })}
           </div>
 
-          {/* Show Player info (Bottom) */}
+          {/* Player Info */}
           {playerInfo.username && opponentInfo.username && (
             <div className="flex justify-between mt-2 px-1">
               <div>{`${playerInfo.username} (${playerInfo.rating})`}</div>

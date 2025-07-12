@@ -9,3 +9,7 @@ export const JOIN_ROOM = "join_room";
 export const ROOM_CREATED = "room_created";
 export const ROOM_JOINED = "room_joined";
 export const ROOM_ERROR = "room_error";
+export const OFFER_DRAW = "offer_draw";
+export const DRAW_REQUESTED = "draw_requested";
+export const DRAW_ACCEPTED = "draw_accepted";
+export const RESIGN = "resign";
