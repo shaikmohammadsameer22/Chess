@@ -17,14 +17,19 @@ export const register = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,
+      secure: false, // Set true in production with HTTPS
       sameSite: 'Lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     res.status(201).json({
       message: 'Registered successfully',
-      user: { id: user._id, username: user.username, email: user.email }
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        rating: user.rating // ✅ Include rating
+      }
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -53,7 +58,12 @@ export const login = async (req, res) => {
 
     res.json({
       message: 'Logged in',
-      user: { id: user._id, username: user.username, email: user.email }
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        rating: user.rating // ✅ Include rating
+      }
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -67,14 +77,20 @@ export const logout = (req, res) => {
 
 export const me = async (req, res) => {
   const token = req.cookies.token;
-  if (!token) return res.status(401).json({ user: null });
+  if (!token) return res.status(401).json(null); // ✅ simplified response
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("username email _id");
-    if (!user) return res.status(404).json({ user: null });
-    res.json({ user });
+    const user = await User.findById(decoded.id).select("username email rating _id");
+    if (!user) return res.status(404).json(null);
+
+    res.json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      rating: user.rating // ✅ Include rating
+    });
   } catch {
-    res.status(401).json({ user: null });
+    res.status(401).json(null);
   }
 };

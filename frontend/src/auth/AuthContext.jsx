@@ -12,8 +12,9 @@ export const AuthProvider = ({ children }) => {
     })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
-        if (data?.user) setUser(data.user);
-      })
+  if (data) setUser(data);  // ✅ direct assignment
+})
+
       .catch(() => {});
   }, []);
 
