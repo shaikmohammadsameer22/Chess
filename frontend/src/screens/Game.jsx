@@ -24,20 +24,29 @@ export const Game = () => {
   const [showAcceptRematch, setShowAcceptRematch] = useState(false);
   const [playerInfo, setPlayerInfo] = useState({ username: "", rating: 1000 });
   const [opponentInfo, setOpponentInfo] = useState({ username: "", rating: 1000 });
-  
-  const sendPlayRequest = () => {
-  if (!user) return;
 
-  socket?.send(
-    JSON.stringify({
-      type: INIT_GAME,
-      payload: {
-        username: user.username,
-        rating: user.rating || 1000,
-      },
-    })
-  );
-};
+  const [timers, setTimers] = useState({});
+  const [displayTimers, setDisplayTimers] = useState({});
+
+  const formatTime = (ms) => {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return `${min.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const sendPlayRequest = () => {
+    if (!user) return;
+    socket?.send(
+      JSON.stringify({
+        type: INIT_GAME,
+        payload: {
+          username: user.username,
+          rating: user.rating || 1000,
+        },
+      })
+    );
+  };
 
   const requestRematch = () => {
     setWaitingRematch(true);
@@ -52,6 +61,19 @@ export const Game = () => {
   };
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      setDisplayTimers((prev) => {
+        const updated = {};
+        for (const key in timers) {
+          updated[key] = formatTime(timers[key]);
+        }
+        return updated;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timers]);
+
+  useEffect(() => {
     if (!socket) return;
 
     socket.onmessage = (event) => {
@@ -59,64 +81,68 @@ export const Game = () => {
         const message = JSON.parse(event.data);
 
         switch (message.type) {
-          case INIT_GAME:
-  const { color, self, opponent } = message.payload;
-  const shortColor = color === "white" ? "w" : "b";
+          case INIT_GAME: {
+            const { color, self, opponent } = message.payload;
+            const shortColor = color === "white" ? "w" : "b";
 
-  const newChess = new Chess();
-  setChess(newChess);
-  setBoard(newChess.board());
-  setPlayerColor(shortColor);
-  setStarted(true);
-  setResultMessage(null);
-  setWaitingRematch(false);
-  setShowAcceptRematch(false);
+            const newChess = new Chess();
+            setChess(newChess);
+            setBoard(newChess.board());
+            setPlayerColor(shortColor);
+            setStarted(true);
+            setResultMessage(null);
+            setWaitingRematch(false);
+            setShowAcceptRematch(false);
 
-  // NEW: Set player and opponent info
-  setPlayerInfo(self);
-  setOpponentInfo(opponent);
-  console.log("✅ Player info:", self);
-console.log("✅ Opponent info:", opponent);
+            setPlayerInfo(self);
+            setOpponentInfo(opponent);
+            break;
+          }
 
-  break;
-
-
-          case MOVE:
+          case MOVE: {
             const move = message.payload;
             chess.move(move);
             setBoard(chess.board());
             break;
+          }
 
-          case GAME_OVER:
-             const { winner, updatedRatings } = message.payload;
+          case GAME_OVER: {
+            const { winner, updatedRatings } = message.payload;
 
-if (winner === "draw") {
-  setResultMessage("Game Drawn 🤝");
-} else {
-  setResultMessage(`${winner.charAt(0).toUpperCase() + winner.slice(1)} Won 🎉`);
-}
+            if (winner === "draw") {
+              setResultMessage("Game Drawn 🤝");
+            } else {
+              setResultMessage(`${winner.charAt(0).toUpperCase() + winner.slice(1)} Won 🎉`);
+            }
 
-// 🔁 Update frontend ratings if available
-if (updatedRatings) {
-  const updateRating = (userObj) => {
-    const newRating = updatedRatings[userObj.username?.toLowerCase()];
-    return newRating !== undefined ? { ...userObj, rating: newRating } : userObj;
-  };
+            if (updatedRatings) {
+              const updateRating = (userObj) => {
+                const newRating = updatedRatings[userObj.username?.toLowerCase()];
+                return newRating !== undefined ? { ...userObj, rating: newRating } : userObj;
+              };
 
-  setPlayerInfo((prev) => updateRating(prev));
-  setOpponentInfo((prev) => updateRating(prev));
-  console.log("🧠 Updated Ratings:", updatedRatings);
-console.log("🎯 Current player:", playerInfo.username);
-console.log("🎯 Current opponent:", opponentInfo.username);
-
-}
-
-
+              setPlayerInfo((prev) => updateRating(prev));
+              setOpponentInfo((prev) => updateRating(prev));
+            }
             break;
+          }
 
           case REMATCH_REQUESTED:
             setShowAcceptRematch(true);
             break;
+
+          case "TIME_UPDATE": {
+            const rawTimers = message.payload;
+            setTimers(rawTimers);
+            setDisplayTimers(() => {
+              const formatted = {};
+              for (const user in rawTimers) {
+                formatted[user] = formatTime(rawTimers[user]);
+              }
+              return formatted;
+            });
+            break;
+          }
 
           default:
             console.warn("Unknown message type:", message.type);
@@ -131,19 +157,19 @@ console.log("🎯 Current opponent:", opponentInfo.username);
 
   return (
     <div className="min-h-screen flex justify-center items-start pt-10">
-      {/* Chess Board */}
+      {/* Chess Board with Timers inside */}
       <div className="relative">
-         <ChessBoard
-  chess={chess}
-  setBoard={setBoard}
-  socket={socket}
-  board={board}
-  playerColor={playerColor}
-  resultMessage={resultMessage}
-  playerInfo={playerInfo}
-  opponentInfo={opponentInfo}
-/>
-
+        <ChessBoard
+          chess={chess}
+          setBoard={setBoard}
+          socket={socket}
+          board={board}
+          playerColor={playerColor}
+          resultMessage={resultMessage}
+          playerInfo={playerInfo}
+          opponentInfo={opponentInfo}
+          displayTimers={displayTimers}
+        />
       </div>
 
       {/* Right Panel */}
@@ -155,31 +181,28 @@ console.log("🎯 Current opponent:", opponentInfo.username);
 
         {/* Game over state with rematch option */}
         {resultMessage && !waitingRematch && !showAcceptRematch && (
-  <>
-    <div className="text-gray-800 text-center mt-4 text-lg font-medium">
-      Game Over
-    </div>
+          <>
+            <div className="text-gray-800 text-center mt-4 text-lg font-medium">
+              Game Over
+            </div>
 
-    {/* Rematch with same opponent */}
-    <Button className="mt-4" onClick={requestRematch}>
-      Play Again
-    </Button>
+            <Button className="mt-4" onClick={requestRematch}>
+              Play Again
+            </Button>
 
-    {/* Match with a new opponent */}
-    <Button
-      className="mt-2"
-      variant="secondary"
-      onClick={() => {
-        setResultMessage(null);
-        setStarted(false);
-        sendPlayRequest(); // Call same function as the initial "Play" button
-      }}
-    >
-      Next Match
-    </Button>
-  </>
-)}
-
+            <Button
+              className="mt-2"
+              variant="secondary"
+              onClick={() => {
+                setResultMessage(null);
+                setStarted(false);
+                sendPlayRequest();
+              }}
+            >
+              Next Match
+            </Button>
+          </>
+        )}
 
         {/* Waiting for opponent's response */}
         {waitingRematch && (

@@ -11,6 +11,7 @@ export const ChessBoard = ({
   resultMessage,
   playerInfo,
   opponentInfo,
+  displayTimers, // ✅ Timer values passed in
 }) => {
   const [from, setFrom] = useState(null);
   const dragSoundRef = useRef(null);
@@ -48,10 +49,11 @@ export const ChessBoard = ({
 
       <div className="relative p-4 bg-gray-900 rounded-xl inline-block border-4 border-gray-700">
         <div className="w-[512px] text-white font-semibold text-lg">
-          {/* Show Opponent info if game has started */}
+          {/* Show Opponent info (Top) */}
           {playerInfo.username && opponentInfo.username && (
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between mb-2 px-1">
               <div>{`${opponentInfo.username} (${opponentInfo.rating})`}</div>
+              <div>{displayTimers[opponentInfo.username] || "10:00"}</div>
             </div>
           )}
 
@@ -65,7 +67,7 @@ export const ChessBoard = ({
               </div>
             )}
 
-            {/* Always render the board, even before game starts */}
+            {/* Render the board */}
             {displayBoard.map((row, rowIndex) => {
               const displayRow = playerColor === "w" ? row : [...row].reverse();
 
@@ -124,10 +126,11 @@ export const ChessBoard = ({
             })}
           </div>
 
-          {/* Show Player info if game has started */}
+          {/* Show Player info (Bottom) */}
           {playerInfo.username && opponentInfo.username && (
-            <div className="flex justify-between mt-2">
+            <div className="flex justify-between mt-2 px-1">
               <div>{`${playerInfo.username} (${playerInfo.rating})`}</div>
+              <div>{displayTimers[playerInfo.username] || "10:00"}</div>
             </div>
           )}
         </div>
