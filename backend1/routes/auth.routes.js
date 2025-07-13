@@ -1,7 +1,9 @@
 import express from 'express';
-import { register, login, logout, me } from '../controllers/auth.controller.js';
+import { register, login, logout, me,googleLogin } from '../controllers/auth.controller.js';
+
 
 const router = express.Router();
+router.post('/google-login', googleLogin);
 
 router.post('/register', register);
 router.post('/login', login);

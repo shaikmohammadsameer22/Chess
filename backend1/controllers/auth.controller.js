@@ -1,6 +1,57 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+export const googleLogin = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        username: name,
+        email,
+        googleId,
+        password: '', // You can add a dummy password or keep it blank
+      });
+    }
+
+    const authToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+
+    res.cookie('token', authToken, {
+      httpOnly: true,
+      secure: false, // Set true in production
+      sameSite: 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      message: 'Google login successful',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        rating: user.rating,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Google login failed:", err);
+    res.status(401).json({ message: 'Unauthorized' });
+  }
+};
 
 export const register = async (req, res) => {
   const { username, email, password } = req.body;

@@ -7,7 +7,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.routes.js';
 import { GameManager } from './GameManager.js';
-
+import { OAuth2Client } from "google-auth-library";
+import jwt from "jsonwebtoken";
 dotenv.config();
 
 // MongoDB Connection

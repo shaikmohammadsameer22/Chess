@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { GoogleLogin } from '@react-oauth/google';
 
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -54,6 +55,37 @@ export const LoginForm = () => {
             Login
           </button>
         </form>
+
+        {/* Google Login */}
+        <div className="mt-6 flex justify-center">
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              try {
+                const res = await fetch("http://localhost:5000/api/auth/google-login", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  credentials: "include",
+                  body: JSON.stringify({ token: credentialResponse.credential }),
+                });
+
+                if (!res.ok) throw new Error("Google login failed");
+
+                const { user } = await res.json(); // ✅ response includes user
+                setUser(user); // ✅ set user in AuthContext
+
+                navigate("/game");
+              } catch (error) {
+                console.error(error);
+                alert("Google login failed");
+              }
+            }}
+            onError={() => {
+              alert("Google Sign-In Failed");
+            }}
+          />
+        </div>
       </div>
     </div>
   );
