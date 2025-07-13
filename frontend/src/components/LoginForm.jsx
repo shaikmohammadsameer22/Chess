@@ -13,7 +13,7 @@ export const LoginForm = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate("/game");
+      navigate("/");
     } catch (err) {
       alert("Login failed");
     }
@@ -75,7 +75,7 @@ export const LoginForm = () => {
                 const { user } = await res.json(); // ✅ response includes user
                 setUser(user); // ✅ set user in AuthContext
 
-                navigate("/game");
+                navigate("/");
               } catch (error) {
                 console.error(error);
                 alert("Google login failed");

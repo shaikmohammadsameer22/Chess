@@ -42,10 +42,7 @@ export const ChessBoard = ({
     <>
       <audio ref={dragSoundRef} src="/drag.wav" preload="auto" />
 
-      {/* Profile Dropdown */}
-      <div className="fixed top-4 right-4 z-50">
-        <ProfileDropdown />
-      </div>
+      
 
       <div className="relative p-4 bg-[#1e1e1e] rounded-xl inline-block border-4 border-[#1e1e1e]">
         <div className="w-[512px] text-white font-semibold text-lg">

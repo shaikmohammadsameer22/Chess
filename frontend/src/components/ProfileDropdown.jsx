@@ -1,56 +1,33 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export const ProfileDropdown = () => {
   const { user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
-  const ref = useRef();
-  const navigate = useNavigate(); // ⬅️ navigation hook
 
   const handleLogout = async () => {
-    await logout();         // logout logic from context
-    setOpen(false);         // close dropdown
-    navigate("/");          // ⬅️ redirect to landing page
+    await logout();
+    window.location.href = "/"; // or use `useNavigate` if inside router
   };
-
-  // Close dropdown if clicked outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   if (!user) return null;
 
   return (
-    <div ref={ref} className="absolute top-4 right-4 z-30 text-white">
-      <div
-        className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center cursor-pointer select-none"
-        onClick={() => setOpen((prev) => !prev)}
-        title="Profile"
-      >
-        {user.username[0].toUpperCase()}
-      </div>
-
-      {open && (
-        <div className="mt-2 absolute right-0 bg-white text-black rounded-lg shadow-lg py-2 w-56">
-          <div className="px-4 py-2 border-b">
-            <p className="font-semibold">{user.username}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-          >
-            🚪 Logout
-          </button>
+    <div className="bg-[#2c2c2c] text-white p-6 rounded-lg shadow-lg w-64">
+      <div className="flex flex-col items-start">
+        <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-xl font-bold mb-3">
+          {user.username[0].toUpperCase()}
         </div>
-      )}
+        <p className="text-lg font-semibold">{user.username}</p>
+        <p className="text-sm text-gray-400 mb-1">{user.email}</p>
+        <p className="text-sm text-yellow-400 font-medium mb-4">
+          Rating: {user.rating || 1000}
+        </p>
+        <button
+          onClick={handleLogout}
+          className="mt-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-medium"
+        >
+          🚪 Logout
+        </button>
+      </div>
     </div>
   );
 };
