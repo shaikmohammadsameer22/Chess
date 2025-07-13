@@ -12,10 +12,8 @@ import {
   RESIGN,
 } from "./messages.js";
 
-const INITIAL_TIME = 600 * 1000; // 10 minutes
-
 export class Game {
-  constructor(player1, player2) {
+  constructor(player1, player2, time = { minutes: 10, increment: 0 }) {
     this.player1 = player1;
     this.player2 = player2;
     this.board = new Chess();
@@ -23,9 +21,13 @@ export class Game {
     this.moveCount = 0;
     this.rematchRequests = new Set();
 
+    this.timeControl = time; // Store time control
+    const initialTimeMs = time.minutes * 60 * 1000;
+    this.increment = time.increment * 1000;
+
     this.timeLeft = {
-      [player1.username]: INITIAL_TIME,
-      [player2.username]: INITIAL_TIME,
+      [player1.username]: initialTimeMs,
+      [player2.username]: initialTimeMs,
     };
 
     this.lastMoveTimestamp = Date.now();
@@ -49,12 +51,22 @@ export class Game {
 
       this.player1.send(JSON.stringify({
         type: INIT_GAME,
-        payload: { color: "white", self: player1Info, opponent: player2Info },
+        payload: {
+          color: "white",
+          self: player1Info,
+          opponent: player2Info,
+          timeControl: this.timeControl,
+        },
       }));
 
       this.player2.send(JSON.stringify({
         type: INIT_GAME,
-        payload: { color: "black", self: player2Info, opponent: player1Info },
+        payload: {
+          color: "black",
+          self: player2Info,
+          opponent: player1Info,
+          timeControl: this.timeControl,
+        },
       }));
     } catch (err) {
       console.error("❌ Failed to fetch updated ratings:", err);
@@ -122,9 +134,11 @@ export class Game {
     this.rematchRequests.clear();
     this.drawOfferedBy = null;
 
+    const initialTimeMs = this.timeControl.minutes * 60 * 1000;
+
     this.timeLeft = {
-      [this.player1.username]: INITIAL_TIME,
-      [this.player2.username]: INITIAL_TIME,
+      [this.player1.username]: initialTimeMs,
+      [this.player2.username]: initialTimeMs,
     };
 
     this.activePlayer = this.player1;
@@ -150,6 +164,10 @@ export class Game {
     }
 
     const otherPlayer = this.moveCount % 2 === 0 ? this.player2 : this.player1;
+
+    // Apply increment before switching
+    this.timeLeft[socket.username] += this.increment;
+
     otherPlayer.send(JSON.stringify({ type: MOVE, payload: move }));
 
     this.clearTimer();
@@ -271,35 +289,34 @@ export class Game {
   }
 
   async acceptDraw(socket) {
-  this.clearTimer();
+    this.clearTimer();
 
-  try {
-    const [updatedP1, updatedP2] = await Promise.all([
-      User.findOne({ username: this.player1.username }),
-      User.findOne({ username: this.player2.username }),
-    ]);
+    try {
+      const [updatedP1, updatedP2] = await Promise.all([
+        User.findOne({ username: this.player1.username }),
+        User.findOne({ username: this.player2.username }),
+      ]);
 
-    this.player1.rating = updatedP1.rating;
-    this.player2.rating = updatedP2.rating;
+      this.player1.rating = updatedP1.rating;
+      this.player2.rating = updatedP2.rating;
 
-    const gameOverMessage = JSON.stringify({
-      type: GAME_OVER,
-      payload: {
-        winner: "draw",
-        updatedRatings: {
-          [this.player1.username]: updatedP1.rating,
-          [this.player2.username]: updatedP2.rating,
+      const gameOverMessage = JSON.stringify({
+        type: GAME_OVER,
+        payload: {
+          winner: "draw",
+          updatedRatings: {
+            [this.player1.username]: updatedP1.rating,
+            [this.player2.username]: updatedP2.rating,
+          },
         },
-      },
-    });
+      });
 
-    this.player1.send(gameOverMessage);
-    this.player2.send(gameOverMessage);
-  } catch (err) {
-    console.error("❌ Failed to fetch player ratings for draw result:", err);
+      this.player1.send(gameOverMessage);
+      this.player2.send(gameOverMessage);
+    } catch (err) {
+      console.error("❌ Failed to fetch player ratings for draw result:", err);
+    }
   }
-}
-
 
   handleMessage(socket, message) {
     console.log("📩 Message:", message.type);

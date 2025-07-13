@@ -12,10 +12,10 @@ import { Game } from "./Game.js";
 
 export class GameManager {
   constructor() {
-    this.games = [];            // All active games
-    this.pendingUser = null;    // Waiting user for random match
-    this.users = [];            // All connected users
-    this.rooms = {};            // RoomID → [socket1, socket2]
+    this.games = [];
+    this.pendingUsers = {}; // Matchmaking queues per time control
+    this.users = [];
+    this.rooms = {};
   }
 
   addUser(socket) {
@@ -29,17 +29,14 @@ export class GameManager {
   }
 
   leaveGame(socket) {
-    // ❌ Remove from active games
     this.games = this.games.filter(
       (g) => g.player1 !== socket && g.player2 !== socket
     );
 
-    // ❌ Remove from pending
-    if (this.pendingUser === socket) {
-      this.pendingUser = null;
+    for (const key in this.pendingUsers) {
+      this.pendingUsers[key] = this.pendingUsers[key].filter((s) => s !== socket);
     }
 
-    // ❌ Remove from room
     for (const roomId in this.rooms) {
       this.rooms[roomId] = this.rooms[roomId].filter((s) => s !== socket);
       if (this.rooms[roomId].length === 0) {
@@ -47,7 +44,6 @@ export class GameManager {
       }
     }
 
-    // ❌ Optional: Remove fully disconnected games
     this.games = this.games.filter(
       (g) => g.player1.readyState === 1 || g.player2.readyState === 1
     );
@@ -69,23 +65,26 @@ export class GameManager {
 
       switch (message.type) {
         case INIT_GAME: {
-          const { username, rating } = message.payload || {};
+          const { username, rating, time } = message.payload || {};
           if (username) {
             socket.username = username;
             socket.rating = rating || 1000;
           }
 
-          this.leaveGame(socket); // Cleanup any old games
+          this.leaveGame(socket);
 
-          if (this.pendingUser && this.pendingUser !== socket) {
-            const newGame = new Game(this.pendingUser, socket);
+          const timeKey = `${time?.minutes || 10}+${time?.increment || 0}`;
+          if (!this.pendingUsers[timeKey]) this.pendingUsers[timeKey] = [];
+
+          const queue = this.pendingUsers[timeKey];
+
+          if (queue.length > 0 && queue[0] !== socket) {
+            const opponent = queue.shift();
+            const newGame = new Game(opponent, socket, time); // pass time config
             this.games.push(newGame);
-            console.log(
-              `✅ Random game started between ${this.pendingUser.username} and ${socket.username}`
-            );
-            this.pendingUser = null;
+            console.log(`✅ Game started between ${opponent.username} and ${socket.username} (${timeKey})`);
           } else {
-            this.pendingUser = socket;
+            queue.push(socket);
           }
 
           break;
@@ -98,7 +97,7 @@ export class GameManager {
           socket.username = username || "Guest";
           socket.rating = rating || 1000;
 
-          this.leaveGame(socket); // Cleanup before joining new room
+          this.leaveGame(socket);
 
           if (!this.rooms[roomId]) {
             this.rooms[roomId] = [socket];
@@ -108,11 +107,9 @@ export class GameManager {
           ) {
             this.rooms[roomId].push(socket);
             const [player1, player2] = this.rooms[roomId];
-            const newGame = new Game(player1, player2);
+            const newGame = new Game(player1, player2); // default time control
             this.games.push(newGame);
-            console.log(
-              `🎯 Friend game started in room ${roomId} between ${player1.username} and ${player2.username}`
-            );
+            console.log(`🎯 Friend game started in room ${roomId} between ${player1.username} and ${player2.username}`);
           } else {
             console.warn(`⚠️ Room ${roomId} is full or duplicate socket`);
           }

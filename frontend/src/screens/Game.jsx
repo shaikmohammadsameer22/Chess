@@ -38,6 +38,8 @@ export const Game = () => {
   const [waitingDrawResponse, setWaitingDrawResponse] = useState(false);
   const [waitingForMatch, setWaitingForMatch] = useState(false);
 
+  const [selectedTime, setSelectedTime] = useState({ minutes: 10, increment: 0 });
+
   const formatTime = (ms) => {
     const totalSec = Math.max(0, Math.floor(ms / 1000));
     const min = Math.floor(totalSec / 60);
@@ -48,12 +50,14 @@ export const Game = () => {
   const sendPlayRequest = () => {
     if (!user) return;
     setWaitingForMatch(true);
+
     socket?.send(
       JSON.stringify({
         type: INIT_GAME,
         payload: {
           username: user.username,
           rating: user.rating || 1000,
+          time: selectedTime, // 🔥 send time control
         },
       })
     );
@@ -251,6 +255,22 @@ export const Game = () => {
       <div className="ml-10 w-64 p-6 flex flex-col items-center bg-[#2c2c2c] shadow-lg rounded-lg">
         {!started && !waitingRematch && !showAcceptRematch && (
           <>
+            <select
+              className="w-full border border-gray-600 bg-[#3b3b3b] text-white rounded px-3 py-2 mb-4"
+              value={`${selectedTime.minutes}+${selectedTime.increment}`}
+              onChange={(e) => {
+                const [min, inc] = e.target.value.split("+").map(Number);
+                setSelectedTime({ minutes: min, increment: inc });
+              }}
+            >
+              <option value="1+0">Bullet (1+0)</option>
+              <option value="3+0">Blitz (3+0)</option>
+              <option value="5+0">Blitz (5+0)</option>
+              <option value="10+0">Rapid (10+0)</option>
+              <option value="15+10">Rapid (15+10)</option>
+              <option value="30+0">Classical (30+0)</option>
+            </select>
+
             <Button onClick={sendPlayRequest}>Play</Button>
             <Button className="mt-4" variant="secondary" onClick={() => navigate("/")}>
               Home
