@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSocket } from "../hooks/useSocket";
 import { Button } from "../components/Button";
@@ -15,6 +16,7 @@ export const OFFER_DRAW = "offer_draw";
 export const DRAW_REQUESTED = "draw_requested";
 export const DRAW_ACCEPTED = "draw_accepted";
 export const RESIGN = "resign";
+export const CHAT_MESSAGE = "CHAT_MESSAGE";
 
 export const Game = () => {
   const socket = useSocket();
@@ -37,8 +39,11 @@ export const Game = () => {
   const [showDrawOffer, setShowDrawOffer] = useState(false);
   const [waitingDrawResponse, setWaitingDrawResponse] = useState(false);
   const [waitingForMatch, setWaitingForMatch] = useState(false);
-
   const [selectedTime, setSelectedTime] = useState({ minutes: 10, increment: 0 });
+
+  // ✅ Chat State
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
 
   const formatTime = (ms) => {
     const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -57,7 +62,7 @@ export const Game = () => {
         payload: {
           username: user.username,
           rating: user.rating || 1000,
-          time: selectedTime, // 🔥 send time control
+          time: selectedTime,
         },
       })
     );
@@ -88,6 +93,32 @@ export const Game = () => {
   const sendResign = () => {
     socket?.send(JSON.stringify({ type: RESIGN }));
   };
+
+  // ✅ Send Chat
+   const sendChatMessage = () => {
+  if (!chatInput.trim()) return;
+
+  const messageToSend = {
+    type: CHAT_MESSAGE,
+    payload: {
+      roomId: opponentInfo.roomId || playerInfo.roomId,
+      message: chatInput.trim(),
+      sender: user?.username || "Guest",
+    },
+  };
+
+  // ✅ Send message to server
+  socket?.send(JSON.stringify(messageToSend));
+
+  // ✅ Immediately show your own message
+  setChatMessages((prev) => [...prev, {
+    sender: user?.username || "Guest",
+    message: chatInput.trim(),
+  }]);
+
+  setChatInput("");
+};
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -125,6 +156,7 @@ export const Game = () => {
             setShowDrawOffer(false);
             setWaitingDrawResponse(false);
             setWaitingForMatch(false);
+            setChatMessages([]);
 
             setPlayerInfo(self);
             setOpponentInfo(opponent);
@@ -203,6 +235,12 @@ export const Game = () => {
             break;
           }
 
+          case CHAT_MESSAGE: {
+            const { message: text, sender } = message.payload;
+            setChatMessages((prev) => [...prev, { sender, message: text }]);
+            break;
+          }
+
           default:
             console.warn("Unknown message type:", message.type);
         }
@@ -251,8 +289,9 @@ export const Game = () => {
         />
       </div>
 
-      {/* Side Panel */}
+      {/* Side Panel with Chat */}
       <div className="ml-10 w-64 p-6 flex flex-col items-center bg-[#2c2c2c] shadow-lg rounded-lg">
+        {/* Game Controls */}
         {!started && !waitingRematch && !showAcceptRematch && (
           <>
             <select
@@ -279,26 +318,66 @@ export const Game = () => {
         )}
 
         {started && (
-          <div className="mt-4 w-full text-center">
-            <select
-              className="w-full border border-gray-600 bg-[#3b3b3b] text-white rounded px-3 py-2"
-              value=""
-              onChange={(e) => {
-                if (e.target.value === "draw" && !waitingDrawResponse) sendDrawRequest();
-                else if (e.target.value === "resign") sendResign();
-              }}
-            >
-              <option value="" disabled>
-                More Options
-              </option>
-              <option value="draw" disabled={waitingDrawResponse}>
-                Offer Draw {waitingDrawResponse ? "(Waiting...)" : ""}
-              </option>
-              <option value="resign">Resign</option>
-            </select>
-          </div>
+          <>
+            <div className="mt-4 w-full text-center">
+              <select
+                className="w-full border border-gray-600 bg-[#3b3b3b] text-white rounded px-3 py-2"
+                value=""
+                onChange={(e) => {
+                  if (e.target.value === "draw" && !waitingDrawResponse) sendDrawRequest();
+                  else if (e.target.value === "resign") sendResign();
+                }}
+              >
+                <option value="" disabled>
+                  More Options
+                </option>
+                <option value="draw" disabled={waitingDrawResponse}>
+                  Offer Draw {waitingDrawResponse ? "(Waiting...)" : ""}
+                </option>
+                <option value="resign">Resign</option>
+              </select>
+            </div>
+
+            {/* ✅ Chat Box */}
+            <div className="mt-6 w-full bg-[#1f1f1f] p-3 rounded shadow-inner flex flex-col">
+  <div className="text-white font-medium mb-2">Chat</div>
+
+  {/* Chat Messages */}
+  <div
+    id="chat-box"
+    className="h-40 overflow-y-auto bg-[#2a2a2a] p-2 rounded text-sm mb-2 flex flex-col gap-1"
+  >
+    {chatMessages.map((msg, idx) => (
+      <div key={idx}>
+        <strong className="text-blue-400">{msg.sender}:</strong>{" "}
+        <span className="text-white">{msg.message}</span>
+      </div>
+    ))}
+  </div>
+
+  {/* Chat Input + Send Button */}
+  <div className="flex gap-2">
+    <input
+      type="text"
+      value={chatInput}
+      onChange={(e) => setChatInput(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && sendChatMessage()}
+      placeholder="Type message..."
+      className="flex-1 px-2 py-1 rounded bg-[#3b3b3b] text-white outline-none"
+    />
+    <button
+      onClick={sendChatMessage}
+      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+    >
+      Send
+    </button>
+  </div>
+</div>
+
+          </>
         )}
 
+        {/* Draw / Rematch / Result logic */}
         {waitingDrawResponse && (
           <div className="text-gray-400 text-center mt-2">
             Waiting for opponent to accept draw...

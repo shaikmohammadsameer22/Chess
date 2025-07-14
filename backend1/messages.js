@@ -13,3 +13,4 @@ export const OFFER_DRAW = "offer_draw";
 export const DRAW_REQUESTED = "draw_requested";
 export const DRAW_ACCEPTED = "draw_accepted";
 export const RESIGN = "resign";
+export const CHAT_MESSAGE = "CHAT_MESSAGE";
