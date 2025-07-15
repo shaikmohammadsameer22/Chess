@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.routes.js';
+import userRoutes from "./routes/user.routes.js";
 import { GameManager } from './GameManager.js';
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
@@ -26,7 +27,7 @@ app.use(cookieParser());
 
 // Auth Routes
 app.use('/api/auth', authRoutes);
-
+app.use("/api/users", userRoutes);
 // HTTP Server
 const server = http.createServer(app);
 
