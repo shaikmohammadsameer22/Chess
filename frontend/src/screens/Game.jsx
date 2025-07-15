@@ -6,6 +6,7 @@ import { Chess } from "chess.js";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SidePanel } from "../components/game/SidePanel";
+import { ChatBox } from "../components/Game/ChatBox";
 
 
 export const INIT_GAME = "init_game";
@@ -44,6 +45,8 @@ export const Game = () => {
 
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const formatTime = (ms) => {
     const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -108,7 +111,8 @@ export const Game = () => {
     }]);
     setChatInput("");
   };
-
+  const toggleChat = () => setIsChatOpen((prev) => !prev);
+  const clearUnreadCount = () => setUnreadCount(0);
   useEffect(() => {
     const interval = setInterval(() => {
       setDisplayTimers((prev) => {
@@ -218,10 +222,15 @@ export const Game = () => {
           }
 
           case CHAT_MESSAGE: {
-            const { message: text, sender } = message.payload;
-            setChatMessages((prev) => [...prev, { sender, message: text }]);
-            break;
-          }
+          const { message: text, sender } = message.payload;
+           setChatMessages((prev) => [...prev, { sender, message: text }]);
+
+  if (!isChatOpen) {
+    setUnreadCount((prev) => prev + 1);
+  }
+  break;
+}
+
 
           default:
             console.warn("Unknown message type:", message.type);
@@ -254,50 +263,67 @@ export const Game = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#1e1e1e] text-white flex justify-center items-start pt-10">
-      <div className="relative">
-        <ChessBoard
-          chess={chess}
-          setBoard={setBoard}
-          socket={socket}
-          board={board}
-          playerColor={playerColor}
-          resultMessage={resultMessage}
-          playerInfo={playerInfo}
-          opponentInfo={opponentInfo}
-          displayTimers={displayTimers}
-        />
-      </div>
-
-      <SidePanel
-        started={started}
-        waitingRematch={waitingRematch}
-        showAcceptRematch={showAcceptRematch}
-        selectedTime={selectedTime}
-        setSelectedTime={setSelectedTime}
-        sendPlayRequest={sendPlayRequest}
-        navigate={navigate}
-        waitingDrawResponse={waitingDrawResponse}
-        sendDrawRequest={sendDrawRequest}
-        sendResign={sendResign}
-        chatMessages={chatMessages}
-        chatInput={chatInput}
-        setChatInput={setChatInput}
-        sendChatMessage={sendChatMessage}
-        waitingDrawResponseState={waitingDrawResponse}
-        showDrawOffer={showDrawOffer}
-        acceptDraw={acceptDraw}
-        setShowDrawOffer={setShowDrawOffer}
+ return (
+  <div className="min-h-screen bg-[#1e1e1e] text-white flex justify-center items-start pt-10 relative">
+    {/* ♟ Chess Board */}
+    <div className="relative">
+      <ChessBoard
+        chess={chess}
+        setBoard={setBoard}
+        socket={socket}
+        board={board}
+        playerColor={playerColor}
         resultMessage={resultMessage}
-        requestRematch={requestRematch}
-        setResultMessage={setResultMessage}
-        setStarted={setStarted}
-        waitingRematchState={waitingRematch}
-        showAcceptRematchState={showAcceptRematch}
-        acceptRematch={acceptRematch}
-        setShowAcceptRematch={setShowAcceptRematch}
+        playerInfo={playerInfo}
+        opponentInfo={opponentInfo}
+        displayTimers={displayTimers}
       />
     </div>
-  );
+
+    {/* 📋 Side Panel */}
+    <SidePanel
+      started={started}
+      waitingRematch={waitingRematch}
+      showAcceptRematch={showAcceptRematch}
+      selectedTime={selectedTime}
+      setSelectedTime={setSelectedTime}
+      sendPlayRequest={sendPlayRequest}
+      navigate={navigate}
+      waitingDrawResponse={waitingDrawResponse}
+      sendDrawRequest={sendDrawRequest}
+      sendResign={sendResign}
+      chatMessages={chatMessages}
+      chatInput={chatInput}
+      setChatInput={setChatInput}
+      sendChatMessage={sendChatMessage}
+      waitingDrawResponseState={waitingDrawResponse}
+      showDrawOffer={showDrawOffer}
+      acceptDraw={acceptDraw}
+      setShowDrawOffer={setShowDrawOffer}
+      resultMessage={resultMessage}
+      requestRematch={requestRematch}
+      setResultMessage={setResultMessage}
+      setStarted={setStarted}
+      waitingRematchState={waitingRematch}
+      showAcceptRematchState={showAcceptRematch}
+      acceptRematch={acceptRematch}
+      setShowAcceptRematch={setShowAcceptRematch}
+    />
+
+    {/* 💬 Chat Popup (Floating Button + Popup Window) */}
+    <ChatBox
+      chatMessages={chatMessages}
+      chatInput={chatInput}
+      setChatInput={setChatInput}
+      sendChatMessage={sendChatMessage}
+      isOpen={isChatOpen}
+      toggleChat={toggleChat}
+      unreadCount={unreadCount}
+      clearUnreadCount={clearUnreadCount}
+      started={started}
+      user={user} 
+    />
+  </div>
+);
+
 };
