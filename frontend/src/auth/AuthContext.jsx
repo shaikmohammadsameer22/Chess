@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }) => {
 
     if (!res.ok) {
       const errorData = await res.json();
+       console.error("❌ Registration error response:", errorData);
       throw new Error(errorData.message || "Registration failed");
     }
   };

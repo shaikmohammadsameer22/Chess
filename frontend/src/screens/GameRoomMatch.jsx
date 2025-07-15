@@ -134,19 +134,28 @@ export const GameRoomMatch = () => {
             setBoard(chess.board());
             break;
 
-          case GAME_OVER: {
+           case GAME_OVER:
+          case "GAME_OVER":
+          case "game_over": {
             const { winner, updatedRatings } = message.payload;
-            setResultMessage(winner === "draw" ? "Game Drawn 🤝" : `${winner} Won 🎉`);
+            setResultMessage(
+              winner === "draw"
+                ? "Game Drawn 🤝"
+                : `${winner.charAt(0).toUpperCase() + winner.slice(1)} Won 🎉`
+            );
+          
             if (updatedRatings) {
               const updateRating = (userObj) => {
                 const newRating = updatedRatings[userObj.username?.toLowerCase()];
                 return newRating !== undefined ? { ...userObj, rating: newRating } : userObj;
               };
+          
               setPlayerInfo((prev) => updateRating(prev));
               setOpponentInfo((prev) => updateRating(prev));
             }
             break;
           }
+
 
           case REMATCH_REQUESTED:
             setShowAcceptRematch(true);
