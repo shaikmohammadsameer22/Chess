@@ -3,9 +3,12 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: ['uuid'],
+  },
   build: {
-    rollupOptions: {
-      external: ['chess.js'], // Add more here if error mentions others
+    commonjsOptions: {
+      include: [/node_modules/],
     },
   },
 });
