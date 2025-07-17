@@ -18,13 +18,15 @@ mongoose.connect(process.env.MONGO_URI).then(() => console.log('✅ MongoDB conn
 
 // Express Setup
 const allowedOrigins = [
-  "https://chess-d1vy-bh45o1uj1-sameers-projects-a1aa30e8.vercel.app", // ✅ real Vercel frontend
+  "https://chess-d1vy.vercel.app", // ✅ use this one
+  "http://localhost:5173", // optional for local testing
 ];
-const app = express();
+
 app.use(cors({
-  origin:  allowedOrigins,
-  credentials: true
+  origin: allowedOrigins,
+  credentials: true,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
