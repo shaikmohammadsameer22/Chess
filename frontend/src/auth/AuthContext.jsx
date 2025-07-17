@@ -2,15 +2,17 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
+// ✅ Replace with your real deployed backend URL
+const BASE_URL = "https://chess-run1.onrender.com"; // e.g., https://chess-backend.onrender.com
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // 🟢 Check session on load
   useEffect(() => {
-    fetch("http://localhost:5000/api/auth/me", {
+    fetch(`${BASE_URL}/api/auth/me`, {
       credentials: "include",
     })
-      .then((res) => res.ok ? res.json() : null)
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) setUser(data);
       })
@@ -18,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = async (username, email, password) => {
-    const res = await fetch("http://localhost:5000/api/auth/register", {
+    const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,13 +31,13 @@ export const AuthProvider = ({ children }) => {
 
     if (!res.ok) {
       const errorData = await res.json();
-       console.error("❌ Registration error response:", errorData);
+      console.error("❌ Registration error response:", errorData);
       throw new Error(errorData.message || "Registration failed");
     }
   };
 
   const login = async (email, password) => {
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    const res = await fetch(`${BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await fetch("http://localhost:5000/api/auth/logout", {
+    await fetch(`${BASE_URL}/api/auth/logout`, {
       credentials: "include",
     });
     setUser(null);
