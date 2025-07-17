@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useSocket } from "../hooks/useSocket";
 import { Button } from "../components/Button";
 import { ChessBoard } from "../components/ChessBoard";
-import  Chess  from "chess.js";
+import { Chess } from "chess.js";
+
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SidePanel } from "../components/game/SidePanel";
