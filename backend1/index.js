@@ -8,43 +8,54 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from "./routes/user.routes.js";
 import { GameManager } from './GameManager.js';
-import { OAuth2Client } from "google-auth-library";
-import jwt from "jsonwebtoken";
+
 dotenv.config();
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI).then(() => console.log('✅ MongoDB connected'))
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Express Setup
+// ✅ Initialize express
+const app = express();
+
+// ✅ Allowed origins
 const allowedOrigins = [
-  "https://chess-d1vy.vercel.app", // ✅ use this one
-  "http://localhost:5173", // optional for local testing
+  "https://chess-d1vy.vercel.app",
+  "http://localhost:5173"
 ];
 
+// ✅ Add CORS middleware BEFORE routes
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
+// ✅ Other middlewares
 app.use(express.json());
 app.use(cookieParser());
 
-// Auth Routes
+// ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use("/api/users", userRoutes);
-// HTTP Server
+
+// ✅ Create server
 const server = http.createServer(app);
 
-// WebSocket Server (using same HTTP server)
+// ✅ WebSocket Setup
 const wss = new WebSocketServer({ server });
-
 const gameManager = new GameManager();
 
 wss.on('connection', (ws) => {
   gameManager.addUser(ws);
 
-  ws.on('close', () => gameManager.removeUser(ws)); // "close" instead of "disconnect"
+  ws.on('close', () => gameManager.removeUser(ws));
 
   ws.send(JSON.stringify({
     type: "welcome",
@@ -52,7 +63,7 @@ wss.on('connection', (ws) => {
   }));
 });
 
-// Start Server
+// ✅ Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 HTTP + WebSocket server running at http://localhost:${PORT}`);
