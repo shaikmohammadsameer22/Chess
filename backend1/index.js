@@ -17,9 +17,12 @@ mongoose.connect(process.env.MONGO_URI).then(() => console.log('✅ MongoDB conn
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Express Setup
+const allowedOrigins = [
+  "https://chess-d1vy-bh45o1uj1-sameers-projects-a1aa30e8.vercel.app", // ✅ real Vercel frontend
+];
 const app = express();
 app.use(cors({
-  origin:  process.env.CLIENT_ORIGIN,
+  origin:  allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
