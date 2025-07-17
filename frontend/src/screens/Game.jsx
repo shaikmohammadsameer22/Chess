@@ -6,7 +6,8 @@ import { Chess } from "chess.js";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SidePanel } from "../components/game/SidePanel";
-import { ChatBox } from "../components/Game/ChatBox";
+import { ChatBox } from "../components/game/ChatBox";
+
 
 
 export const INIT_GAME = "init_game";
@@ -311,7 +312,7 @@ export const Game = () => {
     />
 
     {/* 💬 Chat Popup (Floating Button + Popup Window) */}
-    <ChatBox
+     <ChatBox>
       chatMessages={chatMessages}
       chatInput={chatInput}
       setChatInput={setChatInput}
@@ -322,7 +323,7 @@ export const Game = () => {
       clearUnreadCount={clearUnreadCount}
       started={started}
       user={user} 
-    />
+     </ChatBox>
   </div>
 );
 
