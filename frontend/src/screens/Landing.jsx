@@ -8,21 +8,24 @@ export const Landing = () => {
   const { user, logout, loading } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/users/leaderboard")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch leaderboard");
-        return res.json();
-      })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setLeaderboard(data);
-        } else {
-          console.error("Leaderboard data is not an array", data);
-        }
-      })
-      .catch((err) => console.error("Leaderboard fetch error:", err));
-  }, []);
+ useEffect(() => {
+  fetch("https://chess-run1.onrender.com/api/users/leaderboard", {
+    method: "GET",
+    credentials: "include", 
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch leaderboard");
+      return res.json();
+    })
+    .then((data) => {
+      if (Array.isArray(data)) {
+        setLeaderboard(data);
+      } else {
+        console.error("Leaderboard data is not an array", data);
+      }
+    })
+    .catch((err) => console.error("Leaderboard fetch error:", err));
+}, []);
 
   const handleLogout = async () => {
     await logout();

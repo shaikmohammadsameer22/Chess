@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
-const WS_URL = "ws://localhost:5000";
-
+// Automatically choose the right WebSocket URL
+const WS_URL =
+  import.meta.env.MODE === "production"
+    ? "wss://chess-run1.onrender.com"
+    : "ws://localhost:5000";
 
 export const useSocket = () => {
   const [socket, setSocket] = useState(null);
@@ -10,11 +13,17 @@ export const useSocket = () => {
     const ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
+      console.log("✅ WebSocket connected");
       setSocket(ws);
     };
 
     ws.onclose = () => {
+      console.log("❌ WebSocket disconnected");
       setSocket(null);
+    };
+
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
     };
 
     return () => {

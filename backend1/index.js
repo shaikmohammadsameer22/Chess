@@ -6,65 +6,59 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.routes.js';
-import userRoutes from "./routes/user.routes.js";
+import userRoutes from './routes/user.routes.js';
 import { GameManager } from './GameManager.js';
 
 dotenv.config();
 
-// MongoDB Connection
+// 🔗 Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ✅ Initialize express
+// 🚀 Setup Express
 const app = express();
 
-// ✅ Allowed origins
+// 🌐 CORS for frontend
 const allowedOrigins = [
-  "https://chess-d1vy.vercel.app",
-  "http://localhost:5173"
+  "https://chess-d1vy.vercel.app",  // production
+  "http://localhost:5173"           // development
 ];
 
-// ✅ Add CORS middleware BEFORE routes
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+  origin: allowedOrigins,
+  credentials: true, // 🔑 allows cookies
 }));
 
-// ✅ Other middlewares
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Routes
+// 📦 API Routes
 app.use('/api/auth', authRoutes);
-app.use("/api/users", userRoutes);
+app.use('/api/users', userRoutes);
 
-// ✅ Create server
+// 🔌 HTTP + WebSocket Server
 const server = http.createServer(app);
-
-// ✅ WebSocket Setup
 const wss = new WebSocketServer({ server });
+
 const gameManager = new GameManager();
 
+// ♟️ Handle WebSocket Connections
 wss.on('connection', (ws) => {
   gameManager.addUser(ws);
 
-  ws.on('close', () => gameManager.removeUser(ws));
+  ws.on('close', () => {
+    gameManager.removeUser(ws);
+  });
 
   ws.send(JSON.stringify({
-    type: "welcome",
-    payload: { message: "Welcome to the Chess Game!" }
+    type: 'welcome',
+    payload: { message: 'Welcome to the Chess Game!' }
   }));
 });
 
-// ✅ Start Server
+// 🚀 Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`🚀 HTTP + WebSocket server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
