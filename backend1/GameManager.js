@@ -58,6 +58,7 @@ export class GameManager {
     let message;
     try {
       message = JSON.parse(data.toString());
+      console.log("📩 Incoming message:", msg);
     } catch (err) {
       console.error("Invalid JSON received from client:", data.toString());
       return;
