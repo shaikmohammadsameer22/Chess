@@ -313,18 +313,19 @@ export const Game = () => {
     />
 
     {/* 💬 Chat Popup (Floating Button + Popup Window) */}
-     <ChatBox>
-      chatMessages={chatMessages}
-      chatInput={chatInput}
-      setChatInput={setChatInput}
-      sendChatMessage={sendChatMessage}
-      isOpen={isChatOpen}
-      toggleChat={toggleChat}
-      unreadCount={unreadCount}
-      clearUnreadCount={clearUnreadCount}
-      started={started}
-      user={user} 
-     </ChatBox>
+     <ChatBox
+  chatMessages={chatMessages}
+  chatInput={chatInput}
+  setChatInput={setChatInput}
+  sendChatMessage={sendChatMessage}
+  isOpen={isChatOpen}
+  toggleChat={toggleChat}
+  unreadCount={unreadCount}
+  clearUnreadCount={clearUnreadCount}
+  started={started}
+  user={user}
+/>
+
   </div>
 );
 
