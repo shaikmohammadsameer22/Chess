@@ -53,7 +53,7 @@ export class GameManager {
     );
   }
 
-  async addHandler(socket) {
+   async addHandler(socket) {
   socket.on("message", async (data) => {
     let message;
     try {

@@ -42,23 +42,21 @@ export const ChessBoard = ({
     <>
       <audio ref={dragSoundRef} src="/drag.wav" preload="auto" />
 
-      
-
-      <div className="relative p-4 bg-[#1e1e1e] rounded-xl inline-block border-4 border-[#1e1e1e]">
-        <div className="w-[512px] text-white font-semibold text-lg">
+      <div className="relative p-2 sm:p-4 bg-[#1e1e1e] rounded-xl inline-block border-4 border-[#1e1e1e]">
+        <div className="w-full max-w-[90vw] sm:max-w-[512px] text-white font-semibold text-base sm:text-lg mx-auto">
           {/* Opponent Info */}
           {playerInfo.username && opponentInfo.username && (
-            <div className="flex justify-between mb-2 px-1">
+            <div className="flex justify-between mb-2 px-1 text-sm sm:text-base">
               <div>{`${opponentInfo.username} (${opponentInfo.rating})`}</div>
               <div>{displayTimers[opponentInfo.username] || "10:00"}</div>
             </div>
           )}
 
           {/* Chess Board */}
-          <div className="relative">
+          <div className="relative aspect-square grid grid-cols-8">
             {resultMessage && (
               <div className="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
-                <div className="bg-gray-800 text-white text-3xl font-bold px-6 py-4 rounded-lg shadow-xl animate-fadeIn">
+                <div className="bg-gray-800 text-white text-2xl sm:text-3xl font-bold px-4 py-3 sm:px-6 sm:py-4 rounded-lg shadow-xl animate-fadeIn">
                   {resultMessage}
                 </div>
               </div>
@@ -66,63 +64,59 @@ export const ChessBoard = ({
 
             {displayBoard.map((row, rowIndex) => {
               const displayRow = playerColor === "w" ? row : [...row].reverse();
-              return (
-                <div key={rowIndex} className="flex">
-                  {displayRow.map((square, colIndex) => {
-                    const realRow = playerColor === "w" ? rowIndex : 7 - rowIndex;
-                    const realCol = playerColor === "w" ? colIndex : 7 - colIndex;
+              return displayRow.map((square, colIndex) => {
+                const realRow = playerColor === "w" ? rowIndex : 7 - rowIndex;
+                const realCol = playerColor === "w" ? colIndex : 7 - colIndex;
 
-                    const file = String.fromCharCode(97 + realCol);
-                    const rank = `${8 - realRow}`;
-                    const squareRepresentation = `${file}${rank}`;
-                    const isLight = (realRow + realCol) % 2 === 0;
-                    const isSelected = from === squareRepresentation;
+                const file = String.fromCharCode(97 + realCol);
+                const rank = `${8 - realRow}`;
+                const squareRepresentation = `${file}${rank}`;
+                const isLight = (realRow + realCol) % 2 === 0;
+                const isSelected = from === squareRepresentation;
 
-                    return (
-                      <div
-                        key={colIndex}
-                        onClick={() => {
-                          if (!from) {
-                            setFrom(squareRepresentation);
-                          } else {
-                            handleMove(from, squareRepresentation);
-                          }
+                return (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    onClick={() => {
+                      if (!from) {
+                        setFrom(squareRepresentation);
+                      } else {
+                        handleMove(from, squareRepresentation);
+                      }
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => {
+                      if (from) handleMove(from, squareRepresentation);
+                    }}
+                    className={`w-full h-full flex items-center justify-center cursor-pointer select-none transition duration-150 ease-in-out
+                      ${isSelected ? "ring-4 ring-yellow-500" : ""}
+                      ${isLight ? "bg-[#eeeed2]" : "bg-[#769656]"}
+                      hover:brightness-110`}
+                  >
+                    {square ? (
+                      <img
+                        src={`/${
+                          square.color === "b"
+                            ? square.type
+                            : `${square.type.toUpperCase()} copy`
+                        }.png`}
+                        alt={`${square.color} ${square.type}`}
+                        className="w-[70%] h-[70%] object-contain"
+                        draggable={true}
+                        onDragStart={() => {
+                          setFrom(squareRepresentation);
                         }}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => {
-                          if (from) handleMove(from, squareRepresentation);
-                        }}
-                        className={`w-16 h-16 flex items-center justify-center cursor-pointer select-none transition duration-150 ease-in-out
-                          ${isSelected ? "ring-4 ring-yellow-500" : ""}
-                          ${isLight ? "bg-[#eeeed2]" : "bg-[#769656]"}
-                          hover:brightness-110`}
-                      >
-                        {square ? (
-                          <img
-                            src={`/${
-                              square.color === "b"
-                                ? square.type
-                                : `${square.type.toUpperCase()} copy`
-                            }.png`}
-                            alt={`${square.color} ${square.type}`}
-                            className="w-10 h-10"
-                            draggable={true}
-                            onDragStart={() => {
-                              setFrom(squareRepresentation);
-                            }}
-                          />
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
+                      />
+                    ) : null}
+                  </div>
+                );
+              });
             })}
           </div>
 
           {/* Player Info */}
           {playerInfo.username && opponentInfo.username && (
-            <div className="flex justify-between mt-2 px-1">
+            <div className="flex justify-between mt-2 px-1 text-sm sm:text-base">
               <div>{`${playerInfo.username} (${playerInfo.rating})`}</div>
               <div>{displayTimers[playerInfo.username] || "10:00"}</div>
             </div>
